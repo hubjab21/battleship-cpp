@@ -3,154 +3,149 @@
 #include <cstdlib>
 #include <ctime>
 #include <random>
+#include <clocale>
 
 using namespace std;
 
-class Tablica
+class Board
 {
 public:
-    int m = 10;
-    int l = 1;
-    int ilosc = 0;
-    int licz = 0;
-    int a = 0;
-    int b = 0;
-    clock_t start = 0, stop = 0;
-    double czas = 0;
+    int board_size = 10;
+    int row_label = 1;
+    int ship_count = 0;
+    int hit_count = 0;
+    int random_row = 0;
+    int random_col = 0;
+    clock_t start_time = 0, end_time = 0;
+    double elapsed_time = 0;
 
-    void dodaj()
+    void set_board_size()
     {
-        while ((m <= 9 && m >= 2) != true)
+        while ((board_size <= 9 && board_size >= 2) != true)
         {
-            cout << "podaj wielkość pola planszy w przedziale od 2 do 9: ";
-            cin >> m;
+            cout << "Enter board size in range 2 to 9: ";
+            cin >> board_size;
         }
     }
 
-    void include(vector<vector<char>> &in)
+    void initialize_board(vector<vector<char>> &board)
     {
-
-        in.resize(m);
-        for (int i = 0; i < in.size(); i++)
+        board.resize(board_size);
+        for (int i = 0; i < (int)board.size(); i++)
         {
-            in[i].resize(m);
+            board[i].resize(board_size);
         }
 
-        for (int i = 0; i < in.size(); i++)
+        for (int i = 0; i < (int)board.size(); i++)
         {
-            for (int j = 0; j < in[i].size(); j++)
+            for (int j = 0; j < (int)board[i].size(); j++)
             {
-                in[i][j] = 35;
+                board[i][j] = 35;
             }
         }
     }
 
-    void podmien(vector<vector<char>> &in)
+    void place_ships(vector<vector<char>> &board)
     {
-        for (int i = 0; i < m * 2; i++)
+        for (int i = 0; i < board_size * 2; i++)
         {
             static mt19937 generator(random_device{}());
-            uniform_int_distribution<int> distribution(0, m - 1);
-            a = distribution(generator);
-            b = distribution(generator);
-            in[a][b] = 38;
+            uniform_int_distribution<int> distribution(0, board_size - 1);
+            random_row = distribution(generator);
+            random_col = distribution(generator);
+            board[random_row][random_col] = 38;
         }
     }
-    void zlicz(vector<vector<char>> &in)
+
+    void count_ships(vector<vector<char>> &board)
     {
-        for (int i = 0; i < m; i++)
+        for (int i = 0; i < board_size; i++)
         {
-            for (int j = 0; j < m; j++)
+            for (int j = 0; j < board_size; j++)
             {
-                if (in[i][j] == 38)
+                if (board[i][j] == 38)
                 {
-                    ilosc++;
-                }
-                else
-                {
-                    ilosc = ilosc;
+                    ship_count++;
                 }
             }
         }
     }
-    void statki(vector<vector<char>> &in)
+
+    void attack_position(vector<vector<char>> &board)
     {
         int x, y;
 
         cout << endl;
-        cout << "Masz do zgadnięcia jeszcze " << ilosc - licz << " Wypisz pozycje x y : ";
+        cout << "Ships remaining to find: " << ship_count - hit_count << ". Enter position x y: ";
         cin >> y >> x;
+
 	#ifdef _WIN32
-    		system("cls");
+        	system("cls");
 	#else
-    		system("clear");
+        	system("clear");
 	#endif
+
         if (x == 0 || y == 0)
         {
-            cout << "Wypisz pozycje x y jeszcze raz w poprawnym miejscu zamiast w 0 0: " << endl
-                 << endl;
+            cout << "Enter valid position (not 0 0)." << endl << endl;
         }
-        else if (x > m || y > m)
+        else if (x > board_size || y > board_size)
         {
-            cout << "Wypisz pozycje x y jeszcze raz w poprawnym miejscu zamiast większe od rozmiaru planszy: " << endl
-                 << endl;
+            cout << "Enter position within board size." << endl << endl;
         }
         else
         {
             x--;
             y--;
 
-            if (in[x][y] == 38)
+            if (board[x][y] == 38)
             {
-                cout << "Gratulacje trafiłeś cel.";
-                cout << endl;
-                in[x][y] = 36;
+                cout << "Hit!" << endl;
+                board[x][y] = 36;
             }
-            else if (((x >= 0 && x < m) && (y < m && y >= 0)) && in[x][y] == 35)
+            else if (((x >= 0 && x < board_size) && (y < board_size && y >= 0)) && board[x][y] == 35)
             {
-                cout << "Nie trafiłeś w cel.";
-                cout << endl;
-                in[x][y] = 33;
+                cout << "Miss!" << endl;
+                board[x][y] = 33;
             }
-            else if (in[x][y] == 36 || in[x][y] == 33)
+            else if (board[x][y] == 36 || board[x][y] == 33)
             {
-                cout << "To pole już atakowałeś";
-                cout << endl;
+                cout << "This position was already targeted." << endl;
             }
             else
             {
-                cout << "Nie trafiłeś w tablice";
-                cout << endl;
+                cout << "Invalid position." << endl;
             }
             cout << endl;
         }
     }
-    void print(vector<vector<char>> &in)
+
+    void print_board(vector<vector<char>> &board)
     {
-        l = 1;
-        for (int i = 0; i <= m; i++)
+        row_label = 1;
+        for (int i = 0; i <= board_size; i++)
         {
             if (i == 0)
             {
-                for (int k = 0; k <= m; k++)
+                for (int k = 0; k <= board_size; k++)
                 {
                     cout << k << " ";
                 }
             }
             else
             {
-                for (int j = 0; j <= m; j++)
+                for (int j = 0; j <= board_size; j++)
                 {
                     if (j == 0)
                     {
-                        cout << l << " ";
-                        l++;
+                        cout << row_label << " ";
+                        row_label++;
                     }
                     else
                     {
-                        if (in[i - 1][j - 1] != 38)
+                        if (board[i - 1][j - 1] != 38)
                         {
-                            cout << in[i - 1][j - 1] << " ";
+                            cout << board[i - 1][j - 1] << " ";
                         }
                         else
                         {
@@ -166,65 +161,59 @@ public:
         cout << endl;
     }
 
-    void koniec(vector<vector<char>> &in)
+    void check_game_end(vector<vector<char>> &board)
     {
-
-        if (czas == 0)
+        if (elapsed_time == 0)
         {
-            start = clock();
-        }
-        else
-        {
+            start_time = clock();
         }
 
-        licz = 0;
-        for (int i = 0; i < m; i++)
+        hit_count = 0;
+        for (int i = 0; i < board_size; i++)
         {
-            for (int j = 0; j < m; j++)
+            for (int j = 0; j < board_size; j++)
             {
-                if (in[i][j] == 36)
+                if (board[i][j] == 36)
                 {
-                    licz++;
-                }
-                else
-                {
-                    licz = licz;
+                    hit_count++;
                 }
             }
         }
-        if (ilosc == licz)
+
+        if (ship_count == hit_count)
         {
-            stop = clock();
-            czas = (double)(stop - start) / CLOCKS_PER_SEC;
+            end_time = clock();
+            elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
             cout << endl
-                 << "Wygrałeś w statki na planszy " << m << " na " << m << " w czsie " << czas << " sekund." << endl;
-            cout << "Gratuluje twojej wygranej w statki!!!!!!!!!!!!!!!!!!!" << endl;
+                 << "You won the game on a " << board_size << "x" << board_size
+                 << " board in " << elapsed_time << " seconds." << endl;
+            cout << "Congratulations!" << endl;
             exit(0);
         }
-        czas++;
+
+        elapsed_time++;
     }
 };
 
 int main()
 {
+    setlocale(LC_ALL, "");
 
-    // polskie znaki
-    setlocale(LC_ALL, "polish");
+    vector<vector<char>> board;
+    Board game_board;
 
-    vector<vector<char>> b1;
-    Tablica tab;
-    tab.dodaj();
-    tab.include(b1);
+    game_board.set_board_size();
+    game_board.initialize_board(board);
     cout << endl;
-    tab.print(b1);
-    tab.podmien(b1);
-    tab.zlicz(b1);
+    game_board.print_board(board);
+    game_board.place_ships(board);
+    game_board.count_ships(board);
 
     while (true)
     {
-        tab.statki(b1);
-        tab.print(b1);
-        tab.koniec(b1);
+        game_board.attack_position(board);
+        game_board.print_board(board);
+        game_board.check_game_end(board);
     }
 
     return 0;
